@@ -1,0 +1,48 @@
+{
+	"menu_id" : "ecm_rush_options",
+	"parent_menu_id" : "blt_options",
+	"title" : "ecm_rush_menu_title",
+	"description" : "ecm_rush_menu_desc",
+	"items" : [
+		{
+			"type" : "slider",
+			"id" : "ecm_rush_warn_seconds",
+			"title" : "ecm_rush_warn_seconds_title",
+			"description" : "ecm_rush_warn_seconds_desc",
+			"callback" : "ecm_rush_callback_warn_seconds",
+			"value" : "warn_seconds",
+			"default_value" : 5,
+			"min" : 2,
+			"max" : 15,
+			"step" : 1,
+			"display_precision" : 0
+		},
+		{
+			"type" : "toggle",
+			"id" : "ecm_rush_announce_warning",
+			"title" : "ecm_rush_announce_warning_title",
+			"description" : "ecm_rush_announce_warning_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "announce_warning",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "ecm_rush_announce_next",
+			"title" : "ecm_rush_announce_next_title",
+			"description" : "ecm_rush_announce_next_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "announce_next",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "ecm_rush_announce_order",
+			"title" : "ecm_rush_announce_order_title",
+			"description" : "ecm_rush_announce_order_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "announce_order",
+			"default_value" : true
+		}
+	]
+}
