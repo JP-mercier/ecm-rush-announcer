@@ -146,11 +146,13 @@ end
 -- Remaining ECMs: the last synced ECM count, or the loadout count if they haven't selected ECMs yet.
 function ECMRush:ecm_count(peer)
 	local synced = managers.player:get_synced_deployable_equipment(peer:id())
+	local key = peer:user_id() or peer:id()
 	if synced and synced.deployable == "ecm_jammer" then
-		self:on_deployable_sync(peer, synced.deployable, synced.amount)
+		-- Not on_deployable_sync: polling must not refresh the sync timestamp.
+		self._ecm_counts[key] = synced.amount or 0
 	end
 
-	local known = self._ecm_counts[peer:user_id() or peer:id()]
+	local known = self._ecm_counts[key]
 	if known then
 		return known
 	end
