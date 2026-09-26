@@ -1,7 +1,7 @@
 {
 	"name" : "ECM Rush Announcer",
 	"description" : "Announces in chat whose turn it is to place an ECM during an ECM rush (GREEN > BLUE > RED > YELLOW). Arm it with the keybind. Only players with ECM Specialist aced (pager jamming) are included.",
-	"author" : "Jean-Philippe",
+	"author" : "jpmercier",
 	"version" : "1.0",
 	"blt_version" : 2,
 	"color" : "0.2 0.8 0.3",
