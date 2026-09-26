@@ -45,9 +45,19 @@ The next player is the first peer in that order who:
 
 - is in the session and not in custody
 - has `ecm_jammer.affects_pagers` (ECM Specialist aced)
-- has ECMs left, per the synced deployable count shown on the team HUD
+- has ECMs left (see below)
 
 Players who place out of turn simply have fewer ECMs when their turn comes.
+
+ECM count per player:
+
+- The game only syncs the count of each player's *selected* deployable
+  (`sync_deployable_equipment`). The last ECM count seen for each player is
+  kept, so it stays valid after they switch to their other deployable.
+- Until a player selects their ECMs, the starting count from their loadout is
+  used (outfit fields `deployable_amount` / `secondary_deployable_amount`).
+  A Jack of All Trades second deployable gets `ceil(amount / 2)`, so a second
+  slot ECM with ECM Specialist is 1.
 
 Coverage is the longest remaining battery among active ECMs whose owner has
 pager jamming. Duration is taken from the placed ECM
@@ -60,6 +70,7 @@ ECMs placed before arming are tracked, so arming mid-chain works.
 
 | File | Hook | Purpose |
 |---|---|---|
+| `lua/player_hooks.lua` | `PlayerManager:set_synced_deployable_equipment` | Track each player's ECM count |
 | `lua/ecm_hooks.lua` | `ECMJammerBase.spawn` (host), `ECMJammerBase:sync_setup` (clients) | Record owner, duration level, placement time |
 | `lua/core.lua` | `GameSetupUpdate` | Coverage check, 0.1s interval |
 | `lua/menu.lua` | `MenuManagerInitialize`, `LocalizationManagerPostInit` | Options menu |
@@ -70,7 +81,7 @@ which is synced when each player spawns.
 
 ## Known limitations
 
-- ECMs carried as a Jack of All Trades secondary deployable are not synced to
-  other players, so those players read as having 0 ECMs and are never called.
+- Loadout counts ignore Crime Spree modifiers until the player selects their
+  ECMs and the real count syncs.
 - If more than one player runs the mod and arms it, messages are duplicated.
 - ECMs that existed before you joined (drop-in) are not tracked.

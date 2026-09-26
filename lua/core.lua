@@ -26,6 +26,7 @@ ECMRush.NEXT_UP_DELAY = 1
 ECMRush._armed = false
 ECMRush._ecms = {}
 ECMRush._pager_cache = {}
+ECMRush._ecm_counts = {}
 ECMRush._warned = false
 ECMRush._next_up_t = nil
 ECMRush._update_t = 0
@@ -107,14 +108,42 @@ function ECMRush:blocks_pagers(peer)
 	return self._pager_cache[key] or false
 end
 
--- Remaining ECMs, as shown on the teammate HUD. Only the main deployable is synced,
--- so ECMs carried as a Jack of All Trades second deployable read as 0.
-function ECMRush:ecm_count(peer_id)
-	local synced = managers.player:get_synced_deployable_equipment(peer_id)
-	if synced and synced.deployable == "ecm_jammer" then
-		return synced.amount or 0
+-- Called for every deployable count sync (local player included).
+-- Only the selected deployable is synced, so remember the last ECM count we saw:
+-- it stays valid after the player switches to their other deployable.
+function ECMRush:on_deployable_sync(peer, deployable, amount)
+	if peer and deployable == "ecm_jammer" then
+		self._ecm_counts[peer:user_id() or peer:id()] = amount or 0
+	end
+end
+
+-- Starting ECMs from the loadout. A Jack of All Trades second deployable gets half, rounded up.
+function ECMRush:loadout_ecm_count(peer)
+	local outfit = peer:blackmarket_outfit()
+	if not outfit then
+		return 0
+	end
+	if outfit.deployable == "ecm_jammer" then
+		return outfit.deployable_amount or 0
+	end
+	if outfit.secondary_deployable == "ecm_jammer" then
+		return outfit.secondary_deployable_amount or 0
 	end
 	return 0
+end
+
+-- Remaining ECMs: the last synced ECM count, or the loadout count if they haven't selected ECMs yet.
+function ECMRush:ecm_count(peer)
+	local synced = managers.player:get_synced_deployable_equipment(peer:id())
+	if synced and synced.deployable == "ecm_jammer" then
+		self:on_deployable_sync(peer, synced.deployable, synced.amount)
+	end
+
+	local known = self._ecm_counts[peer:user_id() or peer:id()]
+	if known then
+		return known
+	end
+	return self:loadout_ecm_count(peer)
 end
 
 function ECMRush:is_eligible(peer)
@@ -124,7 +153,7 @@ function ECMRush:is_eligible(peer)
 	if managers.trade and managers.trade:is_peer_in_custody(peer:id()) then
 		return false
 	end
-	return self:ecm_count(peer:id()) > 0
+	return self:ecm_count(peer) > 0
 end
 
 -- First player in color order who still has pager-blocking ECMs.
@@ -211,7 +240,7 @@ function ECMRush:order_string()
 	for peer_id = 1, #self.COLOR_NAMES do
 		local peer = self:peer(peer_id)
 		if peer and self:is_eligible(peer) then
-			table.insert(parts, string.format("%s x%d", self:color_name(peer), self:ecm_count(peer_id)))
+			table.insert(parts, string.format("%s x%d", self:color_name(peer), self:ecm_count(peer)))
 		end
 	end
 	return table.concat(parts, " > ")

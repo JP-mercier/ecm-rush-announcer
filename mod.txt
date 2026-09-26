@@ -11,6 +11,10 @@
 			"script_path" : "lua/ecm_hooks.lua"
 		},
 		{
+			"hook_id" : "lib/managers/playermanager",
+			"script_path" : "lua/player_hooks.lua"
+		},
+		{
 			"hook_id" : "lib/managers/menumanager",
 			"script_path" : "lua/menu.lua"
 		}
