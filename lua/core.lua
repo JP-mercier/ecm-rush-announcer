@@ -20,15 +20,20 @@ ECMRush.settings = {
 ECMRush.COLOR_NAMES = { "GREEN", "BLUE", "RED", "YELLOW" }
 ECMRush.PREFIX = "[ECM] "
 ECMRush.UPDATE_INTERVAL = 0.1
--- The placer's remaining-ECM count syncs a moment after the ECM itself, so wait before saying who's next.
-ECMRush.NEXT_UP_DELAY = 1
+-- After an ECM goes down, "Next" waits for the placer's new ECM count to sync.
+-- If it never shows up (unknown owner, dropped packet), announce anyway after this long.
+ECMRush.NEXT_UP_TIMEOUT = 3
+-- The count sync can arrive just before the ECM itself. Placing takes seconds of holding the key,
+-- so a sync this recent can only belong to the ECM that just went down.
+ECMRush.EARLY_SYNC_WINDOW = 0.5
 
 ECMRush._armed = false
 ECMRush._ecms = {}
 ECMRush._pager_cache = {}
 ECMRush._ecm_counts = {}
+ECMRush._ecm_sync_t = {}
 ECMRush._warned = false
-ECMRush._next_up_t = nil
+ECMRush._next_up = nil
 ECMRush._update_t = 0
 
 ----------------------------------------------------------------
@@ -113,7 +118,13 @@ end
 -- it stays valid after the player switches to their other deployable.
 function ECMRush:on_deployable_sync(peer, deployable, amount)
 	if peer and deployable == "ecm_jammer" then
-		self._ecm_counts[peer:user_id() or peer:id()] = amount or 0
+		local key = peer:user_id() or peer:id()
+		self._ecm_counts[key] = amount or 0
+		self._ecm_sync_t[key] = self:now()
+
+		if self._next_up and self._next_up.key == key then
+			self._next_up.ready = true
+		end
 	end
 end
 
@@ -205,7 +216,13 @@ function ECMRush:on_ecm_placed(unit, peer_id, upgrade_lvl)
 	}
 
 	if self._armed and pagers and self.settings.announce_next then
-		self._next_up_t = self:now() + self.NEXT_UP_DELAY
+		local key = peer and (peer:user_id() or peer:id())
+		local synced_t = key and self._ecm_sync_t[key]
+		self._next_up = {
+			key = key,
+			deadline = self:now() + self.NEXT_UP_TIMEOUT,
+			ready = synced_t ~= nil and self:now() - synced_t <= self.EARLY_SYNC_WINDOW
+		}
 	end
 end
 
@@ -263,7 +280,7 @@ function ECMRush:arm()
 
 	self._armed = true
 	self._warned = false
-	self._next_up_t = nil
+	self._next_up = nil
 
 	self:notify("ECM rush armed.")
 	if self.settings.announce_order then
@@ -273,7 +290,7 @@ end
 
 function ECMRush:disarm(reason)
 	self._armed = false
-	self._next_up_t = nil
+	self._next_up = nil
 	self:notify("ECM rush disarmed" .. (reason and (": " .. reason) or "."))
 end
 
@@ -313,8 +330,8 @@ function ECMRush:update(t, dt)
 	local coverage = self:coverage()
 	local warn_s = self.settings.warn_seconds
 
-	if self._next_up_t and now >= self._next_up_t then
-		self._next_up_t = nil
+	if self._next_up and (self._next_up.ready or now >= self._next_up.deadline) then
+		self._next_up = nil
 		local peer = self:next_peer()
 		if peer then
 			self:say("Next: " .. self:color_name(peer))
@@ -334,7 +351,7 @@ function ECMRush:update(t, dt)
 		else
 			self:notify("Nobody has pager ECMs left.")
 		end
-	elseif coverage <= 0 and not self:next_peer() and not self._next_up_t then
+	elseif coverage <= 0 and not self:next_peer() and not self._next_up then
 		self:disarm("everyone is out of ECMs")
 	end
 end

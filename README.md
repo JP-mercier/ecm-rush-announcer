@@ -58,6 +58,10 @@ ECM count per player:
   used (outfit fields `deployable_amount` / `secondary_deployable_amount`).
   A Jack of All Trades second deployable gets `ceil(amount / 2)`, so a second
   slot ECM with ECM Specialist is 1.
+- After a pager ECM is placed, `Next` is posted once the placer's updated ECM
+  count arrives, so it never names someone who just used their last ECM. Falls
+  back to posting after 3s if no update arrives. A count update received up to
+  0.5s before the ECM itself (network reordering) counts as that placement's.
 
 Coverage is the longest remaining battery among active ECMs whose owner has
 pager jamming. Duration is taken from the placed ECM
