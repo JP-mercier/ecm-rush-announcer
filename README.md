@@ -75,13 +75,25 @@ ECMs placed before arming are tracked, so arming mid-chain works.
 | File | Hook | Purpose |
 |---|---|---|
 | `lua/player_hooks.lua` | `PlayerManager:set_synced_deployable_equipment` | Track each player's ECM count |
+| `lua/network_hooks.lua` | `UnitNetworkHandler:sync_upgrade` (pre) | Record pager jamming before vanilla can drop it |
 | `lua/ecm_hooks.lua` | `ECMJammerBase.spawn` (host), `ECMJammerBase:sync_setup` (clients) | Record owner, duration level, placement time |
 | `lua/core.lua` | `GameSetupUpdate` | Coverage check, 0.1s interval |
 | `lua/menu.lua` | `MenuManagerInitialize`, `LocalizationManagerPostInit` | Options menu |
 | `lua/toggle.lua` | keybind | Arm / disarm |
 
-Works as host or client. Pager upgrades are read from `HuskPlayerBase:upgrade_value`,
-which is synced when each player spawns.
+Works as host or client.
+
+Pager jamming for other players comes from any of:
+
+- their `sync_upgrade ecm_jammer affects_pagers` message
+- `HuskPlayerBase:upgrade_value` (the host's upgrades arrive this way, in its unit's save data)
+- a level 3 ECM placed by them
+
+Clients send `sync_upgrade` from `PlayerBase:init`, straight to every peer. Vanilla's
+handler drops it when the receiver has no unit for that peer yet, which often happens
+between two clients because the unit itself is announced by the host. The husk then never
+gets the upgrade, so the mod reads the message in a pre-hook instead, and a husk saying "no"
+is never trusted over an earlier "yes".
 
 ## Known limitations
 

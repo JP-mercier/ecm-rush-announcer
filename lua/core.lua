@@ -92,25 +92,30 @@ function ECMRush:peer(peer_id)
 end
 
 -- True if this peer has ECM Specialist aced (the only source of pager jamming).
--- The upgrade is synced to every player when their character spawns.
+-- Other players: known from their sync_upgrade message, their husk's upgrades, or a level 3 ECM.
 function ECMRush:blocks_pagers(peer)
-	local key = peer:user_id() or peer:id()
-	local value
-
 	if peer == self:session():local_peer() then
-		value = managers.player:has_category_upgrade("ecm_jammer", "affects_pagers")
-	else
+		return managers.player:has_category_upgrade("ecm_jammer", "affects_pagers")
+	end
+
+	local key = peer:user_id() or peer:id()
+	if not self._pager_cache[key] then
+		-- Only trust a yes: a husk whose sync_upgrade was dropped also says no.
 		local unit = peer:unit()
-		if alive(unit) and unit:base() and unit:base().upgrade_value then
-			value = unit:base():upgrade_value("ecm_jammer", "affects_pagers") and true or false
+		local base = alive(unit) and unit:base()
+		if base and base.upgrade_value and base:upgrade_value("ecm_jammer", "affects_pagers") then
+			self._pager_cache[key] = true
 		end
 	end
 
-	if value ~= nil then
-		self._pager_cache[key] = value
-	end
-
 	return self._pager_cache[key] or false
+end
+
+-- Called for every upgrade another player syncs, even ones vanilla drops.
+function ECMRush:on_upgrade_sync(peer, category, upgrade)
+	if peer and category == "ecm_jammer" and upgrade == "affects_pagers" then
+		self._pager_cache[peer:user_id() or peer:id()] = true
+	end
 end
 
 -- Called for every deployable count sync (local player included).
