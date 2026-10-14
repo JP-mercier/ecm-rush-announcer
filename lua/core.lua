@@ -264,7 +264,7 @@ function ECMRush:order_string()
 	for peer_id = 1, #self.COLOR_NAMES do
 		local peer = self:peer(peer_id)
 		if peer and self:is_eligible(peer) then
-			table.insert(parts, string.format("%s x%d", self:color_name(peer), self:ecm_count(peer)))
+			table.insert(parts, string.format("%s x%d", self:player_label(peer), self:ecm_count(peer)))
 		end
 	end
 	return table.concat(parts, " > ")
@@ -341,7 +341,7 @@ function ECMRush:update(t, dt)
 		self._next_up = nil
 		local peer = self:next_peer()
 		if peer then
-			self:say("Next: " .. self:color_name(peer))
+			self:say("Next: " .. self:player_label(peer))
 		end
 	end
 
@@ -353,7 +353,7 @@ function ECMRush:update(t, dt)
 		local peer = self:next_peer()
 		if peer then
 			if self.settings.announce_warning then
-				self:say(string.format("%ds - %s", math.ceil(coverage), self:color_name(peer)))
+				self:say(string.format("%ds - %s", math.ceil(coverage), self:player_label(peer)))
 			end
 		else
 			self:notify("Nobody has pager ECMs left.")

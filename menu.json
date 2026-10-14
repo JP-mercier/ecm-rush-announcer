@@ -43,6 +43,15 @@
 			"callback" : "ecm_rush_callback_toggle",
 			"value" : "announce_order",
 			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "ecm_rush_use_names",
+			"title" : "ecm_rush_use_names_title",
+			"description" : "ecm_rush_use_names_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "use_names",
+			"default_value" : false
 		}
 	]
 }

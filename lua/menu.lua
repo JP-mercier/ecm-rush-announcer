@@ -6,7 +6,8 @@ end
 local TOGGLE_KEYS = {
 	ecm_rush_announce_warning = "announce_warning",
 	ecm_rush_announce_next = "announce_next",
-	ecm_rush_announce_order = "announce_order"
+	ecm_rush_announce_order = "announce_order",
+	ecm_rush_use_names = "use_names"
 }
 
 Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", function(loc)
@@ -20,7 +21,9 @@ Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", functio
 		ecm_rush_announce_next_title = "Announce next player",
 		ecm_rush_announce_next_desc = "Posts \"[ECM] Next: BLUE\" right after each ECM is placed.",
 		ecm_rush_announce_order_title = "Announce order when armed",
-		ecm_rush_announce_order_desc = "Posts the lineup, with colors and ECM counts, when you arm the announcer."
+		ecm_rush_announce_order_desc = "Posts the lineup, with colors and ECM counts, when you arm the announcer.",
+		ecm_rush_use_names_title = "Use player names",
+		ecm_rush_use_names_desc = "Name players in announcements (\"[ECM] Next: Moke\") instead of by name color (\"[ECM] Next: GREEN\")."
 	})
 end)
 

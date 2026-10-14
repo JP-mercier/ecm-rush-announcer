@@ -21,6 +21,9 @@ Chat output (all toggleable):
 | Pager ECM placed | `[ECM] Next: BLUE` |
 | Coverage at warning threshold | `[ECM] 5s - BLUE` |
 
+With **Use player names** on, players are named instead of colored, e.g.
+`[ECM] Next: Moke`.
+
 Arm/disarm notices are local only. Auto-disarms when the alarm is raised or
 when no eligible player has ECMs left.
 
@@ -34,6 +37,7 @@ when no eligible player has ECMs left.
 | Announce low coverage | on |
 | Announce next player | on |
 | Announce order when armed | on |
+| Use player names | off |
 
 Saved to `mods/saves/ecm_rush_announcer.json`.
 
