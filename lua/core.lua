@@ -13,7 +13,8 @@ ECMRush.settings = {
 	warn_seconds = 5,
 	announce_order = true,
 	announce_next = true,
-	announce_warning = true
+	announce_warning = true,
+	use_names = false
 }
 
 -- Peer ids 1-4 are the name colors, and also the rush order.
@@ -187,6 +188,17 @@ end
 
 function ECMRush:color_name(peer)
 	return self.COLOR_NAMES[peer:id()] or ("PLAYER " .. tostring(peer:id()))
+end
+
+-- How a player is named in chat: their name color, or their name if use_names is on.
+function ECMRush:player_label(peer)
+	if self.settings.use_names then
+		local name = peer:name()
+		if name and name ~= "" then
+			return name
+		end
+	end
+	return self:color_name(peer)
 end
 
 ----------------------------------------------------------------
