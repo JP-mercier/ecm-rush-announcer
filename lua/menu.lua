@@ -7,7 +7,8 @@ local TOGGLE_KEYS = {
 	ecm_rush_announce_warning = "announce_warning",
 	ecm_rush_announce_next = "announce_next",
 	ecm_rush_announce_order = "announce_order",
-	ecm_rush_use_names = "use_names"
+	ecm_rush_use_names = "use_names",
+	ecm_rush_hide_foreign_timers = "hide_foreign_timers"
 }
 
 Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", function(loc)
@@ -23,7 +24,9 @@ Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", functio
 		ecm_rush_announce_order_title = "Announce order when armed",
 		ecm_rush_announce_order_desc = "Posts the lineup, with colors and ECM counts, when you arm the announcer.",
 		ecm_rush_use_names_title = "Use player names",
-		ecm_rush_use_names_desc = "Name players in announcements (\"[ECM] Next: Moke\") instead of by name color (\"[ECM] Next: GREEN\")."
+		ecm_rush_use_names_desc = "Name players in announcements (\"[ECM] Next: Moke\") instead of by name color (\"[ECM] Next: GREEN\").",
+		ecm_rush_hide_foreign_timers_title = "Hide other ECM timer mods' messages",
+		ecm_rush_hide_foreign_timers_desc = "Hides \"ECM effect has started!\", \"ECM has 5 seconds left!\" and \"Full-length ECM placed!\" posted by other players' mods. Only on your screen: everyone else still sees them."
 	})
 end)
 

@@ -38,6 +38,14 @@ when no eligible player has ECMs left.
 | Announce next player | on |
 | Announce order when armed | on |
 | Use player names | off |
+| Hide other ECM timer mods' messages | off |
+
+**Hide other ECM timer mods' messages** drops incoming chat from other players
+that starts with `ECM effect has started`, `ECM has N second(s) left` or
+`Full-length ECM placed` (patterns in `ECMRush.FOREIGN_TIMER_PATTERNS`).
+Messages starting with `[ECM] ` are never hidden. This only affects your own
+screen: chat is sent by each client directly to every peer, so nothing can
+stop other players from seeing it.
 
 Saved to `mods/saves/ecm_rush_announcer.json`.
 
@@ -90,6 +98,7 @@ ECMs placed before arming are tracked, so arming mid-chain works.
 | `lua/player_hooks.lua` | `PlayerManager:set_synced_deployable_equipment` | Track each player's ECM count |
 | `lua/network_hooks.lua` | `UnitNetworkHandler:sync_upgrade` (pre) | Record pager jamming before vanilla can drop it |
 | `lua/ecm_hooks.lua` | `ECMJammerBase.spawn` (host), `ECMJammerBase:sync_setup` (clients) | Record owner, duration level, placement time |
+| `lua/chat_hooks.lua` | `ChatManager:receive_message_by_peer` (replaced) | Hide other ECM timer mods' messages (opt-in) |
 | `lua/core.lua` | `GameSetupUpdate` | Coverage check, 0.1s interval |
 | `lua/menu.lua` | `MenuManagerInitialize`, `LocalizationManagerPostInit` | Options menu |
 | `lua/toggle.lua` | keybind | Arm / disarm |

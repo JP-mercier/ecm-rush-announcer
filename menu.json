@@ -52,6 +52,15 @@
 			"callback" : "ecm_rush_callback_toggle",
 			"value" : "use_names",
 			"default_value" : false
+		},
+		{
+			"type" : "toggle",
+			"id" : "ecm_rush_hide_foreign_timers",
+			"title" : "ecm_rush_hide_foreign_timers_title",
+			"description" : "ecm_rush_hide_foreign_timers_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "hide_foreign_timers",
+			"default_value" : false
 		}
 	]
 }

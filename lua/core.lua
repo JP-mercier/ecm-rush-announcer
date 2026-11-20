@@ -14,7 +14,15 @@ ECMRush.settings = {
 	announce_order = true,
 	announce_next = true,
 	announce_warning = true,
-	use_names = false
+	use_names = false,
+	hide_foreign_timers = false
+}
+
+-- Messages posted by other ECM timer mods, hidden when hide_foreign_timers is on.
+ECMRush.FOREIGN_TIMER_PATTERNS = {
+	"^ECM effect has started",
+	"^ECM has %d+ seconds? left",
+	"^Full%-length ECM placed"
 }
 
 -- Peer ids 1-4 are the name colors, and also the rush order.
@@ -73,6 +81,19 @@ function ECMRush:say(message)
 	if managers.chat and managers.network:session() then
 		managers.chat:send_message(ChatManager.GAME, nil, self.PREFIX .. message)
 	end
+end
+
+-- True for another ECM timer mod's message. Ours (with PREFIX) never match.
+function ECMRush:is_foreign_ecm_message(message)
+	if type(message) ~= "string" or message:sub(1, #self.PREFIX) == self.PREFIX then
+		return false
+	end
+	for _, pattern in ipairs(self.FOREIGN_TIMER_PATTERNS) do
+		if message:find(pattern) then
+			return true
+		end
+	end
+	return false
 end
 
 -- Only shown on your own screen.
