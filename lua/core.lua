@@ -33,6 +33,8 @@ ECMRush._ecms = {}
 ECMRush._pager_cache = {}
 ECMRush._ecm_counts = {}
 ECMRush._ecm_sync_t = {}
+ECMRush._placed = {}
+ECMRush._ignored_zero_t = {}
 ECMRush._warned = false
 ECMRush._next_up = nil
 ECMRush._update_t = 0
@@ -119,13 +121,28 @@ function ECMRush:on_upgrade_sync(peer, category, upgrade)
 	end
 end
 
+-- Entering civilian state (Golden Grin before taking the gear) syncs the selected deployable
+-- as 0, and vanilla never syncs the real count back on exit (PlayerCivilian:exit checks for a
+-- string amount, but amounts are tables). So a 0 from a player who hasn't placed an ECM yet is
+-- not believed, unless their first ECM goes down right after it (they used their only one).
+function ECMRush:set_ecm_count(key, amount, from_sync)
+	amount = amount or 0
+	if amount == 0 and not self._placed[key] then
+		if from_sync then
+			self._ignored_zero_t[key] = self:now()
+		end
+		return
+	end
+	self._ecm_counts[key] = amount
+end
+
 -- Called for every deployable count sync (local player included).
 -- Only the selected deployable is synced, so remember the last ECM count we saw:
 -- it stays valid after the player switches to their other deployable.
 function ECMRush:on_deployable_sync(peer, deployable, amount)
 	if peer and deployable == "ecm_jammer" then
 		local key = peer:user_id() or peer:id()
-		self._ecm_counts[key] = amount or 0
+		self:set_ecm_count(key, amount, true)
 		self._ecm_sync_t[key] = self:now()
 
 		if self._next_up and self._next_up.key == key then
@@ -151,11 +168,16 @@ end
 
 -- Remaining ECMs: the last synced ECM count, or the loadout count if they haven't selected ECMs yet.
 function ECMRush:ecm_count(peer)
+	if peer == self:session():local_peer() then
+		-- Our own count is exact. The synced copy can be a stale 0 (see set_ecm_count).
+		return managers.player:get_equipment_amount("ecm_jammer")
+	end
+
 	local synced = managers.player:get_synced_deployable_equipment(peer:id())
 	local key = peer:user_id() or peer:id()
 	if synced and synced.deployable == "ecm_jammer" then
 		-- Not on_deployable_sync: polling must not refresh the sync timestamp.
-		self._ecm_counts[key] = synced.amount or 0
+		self:set_ecm_count(key, synced.amount, false)
 	end
 
 	local known = self._ecm_counts[key]
@@ -219,8 +241,17 @@ function ECMRush:on_ecm_placed(unit, peer_id, upgrade_lvl)
 	-- Level 3 duration needs ECM Specialist aced, so it always blocks pagers.
 	local pagers = upgrade_lvl == 3
 	if peer then
+		local key = peer:user_id() or peer:id()
+		self._placed[key] = true
+		-- Their count sync arrived just before this ECM and was a real 0: this was their last one.
+		local zero_t = self._ignored_zero_t[key]
+		if zero_t and self:now() - zero_t <= self.EARLY_SYNC_WINDOW then
+			self._ecm_counts[key] = 0
+		end
+		self._ignored_zero_t[key] = nil
+
 		if pagers then
-			self._pager_cache[peer:user_id() or peer:id()] = true
+			self._pager_cache[key] = true
 		else
 			pagers = self:blocks_pagers(peer)
 		end
