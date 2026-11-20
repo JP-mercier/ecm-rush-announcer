@@ -74,15 +74,6 @@ ECM count per player:
   count arrives, so it never names someone who just used their last ECM. Falls
   back to posting after 3s if no update arrives. A count update received up to
   0.5s before the ECM itself (network reordering) counts as that placement's.
-- Your own count is read directly from `PlayerManager:get_equipment_amount`,
-  not from the synced copy.
-- A synced ECM count of 0 from a player who hasn't placed an ECM yet is
-  ignored, unless their first ECM shows up within 0.5s of it. Entering the
-  civilian player state (Golden Grin Casino before taking the gear from the
-  guitar case) syncs the selected deployable as 0, and vanilla never sends the
-  real count back on exit: `PlayerCivilian:exit` only resyncs when the amount
-  is a string, but equipment amounts are tables. Without this, everyone would
-  read as having no ECMs until they placed one or switched deployables.
 
 Coverage is the longest remaining battery among active ECMs whose owner has
 pager jamming. Duration is taken from the placed ECM
@@ -123,6 +114,3 @@ is never trusted over an earlier "yes".
   ECMs and the real count syncs.
 - If more than one player runs the mod and arms it, messages are duplicated.
 - ECMs that existed before you joined (drop-in) are not tracked.
-- A player who rejoins after using deployables has their count reset to 0 by
-  the drop-in penalty. If you didn't see them place an ECM earlier (you joined
-  after they did), that 0 is ignored and their loadout count is used instead.
