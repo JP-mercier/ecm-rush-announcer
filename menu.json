@@ -19,6 +19,15 @@
 		},
 		{
 			"type" : "toggle",
+			"id" : "ecm_rush_auto_arm",
+			"title" : "ecm_rush_auto_arm_title",
+			"description" : "ecm_rush_auto_arm_desc",
+			"callback" : "ecm_rush_callback_toggle",
+			"value" : "auto_arm",
+			"default_value" : false
+		},
+		{
+			"type" : "toggle",
 			"id" : "ecm_rush_announce_warning",
 			"title" : "ecm_rush_announce_warning_title",
 			"description" : "ecm_rush_announce_warning_desc",

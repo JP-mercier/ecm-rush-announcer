@@ -8,7 +8,8 @@ local TOGGLE_KEYS = {
 	ecm_rush_announce_next = "announce_next",
 	ecm_rush_announce_order = "announce_order",
 	ecm_rush_use_names = "use_names",
-	ecm_rush_hide_foreign_timers = "hide_foreign_timers"
+	ecm_rush_hide_foreign_timers = "hide_foreign_timers",
+	ecm_rush_auto_arm = "auto_arm"
 }
 
 Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", function(loc)
@@ -17,6 +18,8 @@ Hooks:Add("LocalizationManagerPostInit", "ECMRushAnnouncerLocalization", functio
 		ecm_rush_menu_desc = "Chat announcements for ECM rushes. Arm it with the keybind under Mod Keybinds.",
 		ecm_rush_warn_seconds_title = "Warning time (seconds)",
 		ecm_rush_warn_seconds_desc = "How many seconds of pager coverage are left when the next player is called.",
+		ecm_rush_auto_arm_title = "Arm when an ECM is placed",
+		ecm_rush_auto_arm_desc = "Arms the announcer by itself when someone places a pager-blocking ECM in stealth. Disarming with the keybind turns this off until the next heist.",
 		ecm_rush_announce_warning_title = "Announce low coverage",
 		ecm_rush_announce_warning_desc = "Posts \"[ECM] 5s - BLUE\" when the current ECMs are about to run out.",
 		ecm_rush_announce_next_title = "Announce next player",

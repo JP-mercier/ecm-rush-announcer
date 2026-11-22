@@ -15,7 +15,8 @@ ECMRush.settings = {
 	announce_next = true,
 	announce_warning = true,
 	use_names = false,
-	hide_foreign_timers = false
+	hide_foreign_timers = false,
+	auto_arm = false
 }
 
 -- Messages posted by other ECM timer mods, hidden when hide_foreign_timers is on.
@@ -44,6 +45,10 @@ ECMRush._ecm_counts = {}
 ECMRush._ecm_sync_t = {}
 ECMRush._warned = false
 ECMRush._next_up = nil
+-- auto_arm: a pager ECM went down while disarmed; arm once the placer's count syncs.
+ECMRush._pending_arm = nil
+-- Disarmed with the keybind: auto_arm stays off for the rest of the heist.
+ECMRush._user_disarmed = false
 ECMRush._update_t = 0
 
 ----------------------------------------------------------------
@@ -153,6 +158,9 @@ function ECMRush:on_deployable_sync(peer, deployable, amount)
 		if self._next_up and self._next_up.key == key then
 			self._next_up.ready = true
 		end
+		if self._pending_arm and self._pending_arm.key == key then
+			self._pending_arm.ready = true
+		end
 	end
 end
 
@@ -256,15 +264,32 @@ function ECMRush:on_ecm_placed(unit, peer_id, upgrade_lvl)
 		expire_t = self:now() + duration
 	}
 
-	if self._armed and pagers and self.settings.announce_next then
-		local key = peer and (peer:user_id() or peer:id())
-		local synced_t = key and self._ecm_sync_t[key]
-		self._next_up = {
-			key = key,
-			deadline = self:now() + self.NEXT_UP_TIMEOUT,
-			ready = synced_t ~= nil and self:now() - synced_t <= self.EARLY_SYNC_WINDOW
-		}
+	if not pagers then
+		return
 	end
+
+	if self._armed then
+		if self.settings.announce_next then
+			self._next_up = self:wait_for_count(peer)
+		end
+	elseif self.settings.auto_arm and not self._user_disarmed and self:in_stealth() then
+		self._pending_arm = self:wait_for_count(peer)
+	end
+end
+
+-- Something to do once this placer's new ECM count syncs (or after NEXT_UP_TIMEOUT).
+function ECMRush:wait_for_count(peer)
+	local key = peer and (peer:user_id() or peer:id())
+	local synced_t = key and self._ecm_sync_t[key]
+	return {
+		key = key,
+		deadline = self:now() + self.NEXT_UP_TIMEOUT,
+		ready = synced_t ~= nil and self:now() - synced_t <= self.EARLY_SYNC_WINDOW
+	}
+end
+
+function ECMRush:is_due(pending)
+	return pending.ready or self:now() >= pending.deadline
 end
 
 -- Seconds of pager coverage left (the longest-lasting active pager ECM).
@@ -304,18 +329,25 @@ function ECMRush:order_string()
 	return table.concat(parts, " > ")
 end
 
-function ECMRush:arm()
+-- auto: armed by auto_arm after an ECM went down. Fails silently, and posts Next when the
+-- order isn't posted (the order already starts with whoever is next).
+function ECMRush:arm(auto)
+	self._pending_arm = nil
 	if not self:session() or not managers.groupai then
 		return
 	end
 	if not self:in_stealth() then
-		self:notify("Can't arm: the alarm is already up.")
+		if not auto then
+			self:notify("Can't arm: the alarm is already up.")
+		end
 		return
 	end
 
 	local order = self:order_string()
 	if order == "" then
-		self:notify("Can't arm: nobody with ECM Specialist aced has ECMs left.")
+		if not auto then
+			self:notify("Can't arm: nobody with ECM Specialist aced has ECMs left.")
+		end
 		return
 	end
 
@@ -323,22 +355,30 @@ function ECMRush:arm()
 	self._warned = false
 	self._next_up = nil
 
-	self:notify("ECM rush armed.")
+	self:notify(auto and "ECM rush armed (ECM placed)." or "ECM rush armed.")
 	if self.settings.announce_order then
 		self:say("Order: " .. order)
+	elseif auto and self.settings.announce_next then
+		local peer = self:next_peer()
+		if peer then
+			self:say("Next: " .. self:player_label(peer))
+		end
 	end
 end
 
 function ECMRush:disarm(reason)
 	self._armed = false
 	self._next_up = nil
+	self._pending_arm = nil
 	self:notify("ECM rush disarmed" .. (reason and (": " .. reason) or "."))
 end
 
 function ECMRush:toggle()
 	if self._armed then
+		self._user_disarmed = true
 		self:disarm()
 	else
+		self._user_disarmed = false
 		self:arm()
 	end
 end
@@ -347,7 +387,7 @@ end
 -- Update loop
 ----------------------------------------------------------------
 function ECMRush:update(t, dt)
-	if not self._armed then
+	if not self._armed and not self._pending_arm then
 		return
 	end
 
@@ -359,7 +399,17 @@ function ECMRush:update(t, dt)
 
 	if not self:session() then
 		self._armed = false
+		self._pending_arm = nil
 		return
+	end
+
+	if self._pending_arm then
+		if self:is_due(self._pending_arm) then
+			self:arm(true)
+		end
+		if not self._armed then
+			return
+		end
 	end
 
 	if not self:in_stealth() then
@@ -371,7 +421,7 @@ function ECMRush:update(t, dt)
 	local coverage = self:coverage()
 	local warn_s = self.settings.warn_seconds
 
-	if self._next_up and (self._next_up.ready or now >= self._next_up.deadline) then
+	if self._next_up and self:is_due(self._next_up) then
 		self._next_up = nil
 		local peer = self:next_peer()
 		if peer then

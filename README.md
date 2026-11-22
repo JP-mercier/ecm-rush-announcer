@@ -13,6 +13,13 @@ Bind the key under **Options > Mod Keybinds > Arm / disarm ECM rush**.
 
 Press the keybind in a heist to arm it. Press again to disarm.
 
+With **Arm when an ECM is placed** on, the first pager-blocking ECM placed in
+stealth arms it automatically (after the placer's new ECM count syncs, so the
+posted order is accurate). If the order announcement is off, `Next` is posted
+instead. Disarming with the keybind turns auto-arming off until the next heist;
+pressing the keybind to arm again turns it back on. Auto-disarms (alarm, out of
+ECMs) don't block it.
+
 Chat output (all toggleable):
 
 | Event | Message |
@@ -34,6 +41,7 @@ when no eligible player has ECMs left.
 | Setting | Default |
 |---|---|
 | Warning time (seconds) | 5 (range 2-15) |
+| Arm when an ECM is placed | off |
 | Announce low coverage | on |
 | Announce next player | on |
 | Announce order when armed | on |
@@ -93,6 +101,9 @@ ECMs placed before arming are tracked, so arming mid-chain works.
 | `lua/core.lua` | `GameSetupUpdate` | Coverage check, 0.1s interval |
 | `lua/menu.lua` | `MenuManagerInitialize`, `LocalizationManagerPostInit` | Options menu |
 | `lua/toggle.lua` | keybind | Arm / disarm |
+
+Auto-arming: a pager ECM placed while disarmed queues an arm, which the
+`GameSetupUpdate` loop runs once the placer's count syncs (3s fallback).
 
 Works as host or client.
 
