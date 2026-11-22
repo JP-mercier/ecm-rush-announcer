@@ -41,7 +41,7 @@ when no eligible player has ECMs left.
 | Hide other ECM timer mods' messages | off |
 
 **Hide other ECM timer mods' messages** drops incoming chat from other players
-that starts with `ECM effect has started`, `ECM has N second(s) left` or
+that starts with `ECM effect has started`, `Pocket ECM has started`, `ECM has N second(s) left` or
 `Full-length ECM placed` (patterns in `ECMRush.FOREIGN_TIMER_PATTERNS`).
 Messages starting with `[ECM] ` are never hidden. This only affects your own
 screen: chat is sent by each client directly to every peer, so nothing can

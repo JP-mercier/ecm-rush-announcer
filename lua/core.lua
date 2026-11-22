@@ -21,6 +21,7 @@ ECMRush.settings = {
 -- Messages posted by other ECM timer mods, hidden when hide_foreign_timers is on.
 ECMRush.FOREIGN_TIMER_PATTERNS = {
 	"^ECM effect has started",
+	"^Pocket ECM has started",
 	"^ECM has %d+ seconds? left",
 	"^Full%-length ECM placed"
 }
